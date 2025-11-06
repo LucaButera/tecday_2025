@@ -1,0 +1,19 @@
+[project]
+name = "tecday-2025"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "contextily>=1.6.2",
+    "geopandas>=1.0.1",
+    "matplotlib>=3.9.4",
+    "notebook>=7.4.7",
+    "peakweather",
+    "scikit-learn>=1.6.1",
+    "statsmodels>=0.14.5",
+    "torch>=2.8.0",
+]
+
+[tool.uv.sources]
+peakweather = { git = "https://github.com/MeteoSwiss/PeakWeather.git" }
