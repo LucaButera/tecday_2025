@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import torch
 from peakweather.dataset import PeakWeatherDataset
 from torch.utils.data import Dataset, DataLoader
+import geopandas as gpd
+from shapely.geometry import Point
+import contextily as ctx
 
 
 class PeakWeatherTorchDataset(Dataset):
@@ -118,4 +121,70 @@ def plot_predictions(
             axs[i].legend()
             axs[i].set_title(f"Sample {n}")
     plt.tight_layout()
+    plt.show()
+
+
+def plot_stations_on_map(dataset, station_ids: list[str] | None = None):
+    # Get stations data
+    df = (
+        dataset.stations_table[["latitude", "longitude"]]
+        if station_ids is None
+        else dataset.stations_table.loc[station_ids, ["latitude", "longitude"]]
+    )
+    # Convert to GeoDataFrame
+    gdf = gpd.GeoDataFrame(
+        df,
+        geometry=[Point(xy) for xy in zip(df.longitude, df.latitude)],
+        crs="EPSG:4326",
+    )
+
+    # --- Load Swiss canton boundaries from GeoBoundaries ---
+    cantons = gpd.read_file(
+        "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/CHE/ADM1/geoBoundaries-CHE-ADM1_simplified.geojson"
+    )
+    # Create the national border by dissolving cantons
+    swiss_border = cantons.dissolve()
+
+    # --- Project to Web Mercator (for basemap compatibility) ---
+    gdf_web = gdf.to_crs(epsg=3857)
+    border_web = swiss_border.to_crs(epsg=3857)
+    cantons_web = cantons.to_crs(epsg=3857)
+
+    # --- Plot everything ---
+    fig, ax = plt.subplots(figsize=(12, 12))
+    border_web.boundary.plot(ax=ax, color="darkred", linewidth=1.5)
+    cantons_web.boundary.plot(ax=ax, color="goldenrod", linewidth=0.6)
+    gdf_web.plot(ax=ax, color="red", markersize=25, zorder=5)
+
+    # Add basemap (OpenStreetMap)
+    ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+    # Add labels
+    for x, y, label in zip(gdf_web.geometry.x, gdf_web.geometry.y, gdf_web.index):
+        ax.text(x + 5000, y, label, fontsize=6, color="black", weight="bold")
+
+    ax.set_title("Selected meteorological stations in Switzerland", fontsize=14)
+    ax.set_axis_off()
+    plt.show()
+
+
+def plot_timeseries(
+    dataset, station_ids: list[str], parameter: str, start_date: str, end_date: str
+):
+    station = dataset.get_observations(
+        stations=station_ids,
+        parameters=parameter,
+        first_date=start_date,
+        last_date=end_date,
+    )
+    station.plot(
+        ylabel=parameter.capitalize(),
+        xlabel="Date",
+        title="Time series at selected meteorological stations in Switzerland",
+        legend=True,
+        subplots=True,
+        figsize=(10, 6),
+        sharex=True,
+        sharey=True,
+    )
     plt.show()
