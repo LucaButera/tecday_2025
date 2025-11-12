@@ -9,6 +9,14 @@ from shapely.geometry import Point
 import contextily as ctx
 
 
+def shift_date_back(date: str, hours: int) -> str:
+    from datetime import datetime, timedelta
+
+    dt = datetime.strptime(date, "%Y-%m-%d")
+    dt_shifted = dt - timedelta(hours=hours)
+    return dt_shifted.strftime("%Y-%m-%d %H:%M:%S")
+
+
 class PeakWeatherTorchDataset(Dataset):
     Sample = namedtuple("Sample", ["x", "y", "mu", "sigma"])
 
@@ -35,13 +43,13 @@ class PeakWeatherTorchDataset(Dataset):
             "train": train[:, good_stations].squeeze(),
             "val": ds.get_observations(
                 parameters=parameter,
-                first_date="2020-12-01",
+                first_date=shift_date_back("2020-12-01", hours=self.window),
                 last_date="2020-12-31",
                 as_numpy=True,
             )[:, good_stations].squeeze(),
             "test": ds.get_observations(
                 parameters=parameter,
-                first_date="2021-01-01",
+                first_date=shift_date_back("2021-01-01", hours=self.window),
                 last_date="2021-01-31",
                 as_numpy=True,
             )[:, good_stations].squeeze(),
