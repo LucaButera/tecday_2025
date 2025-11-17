@@ -20,6 +20,16 @@ uv sync
 ```
 dalla root della repository.
 
+>In alternativa è possibile utilizzare un ambiente virtuale `conda`.
+>Per installare `conda` segui la [documentazione ufficiale](https://www.anaconda.com/docs/getting-started/miniconda/install).
+>
+>Poi installa le dipendenze eseguendo:
+>```bash
+>conda env create -f environment.yml
+>```
+>dalla root della repository.
+
+
 ## Esecuzione del codice
 Il codice del workshop è organizzato in notebook Jupyter. Puoi eseguire i notebook utilizzando Jupyter Notebook.
 
@@ -28,5 +38,10 @@ Per avviare il server Jupyter Notebook, esegui:
 uv run jupyter notebook
 ```
 dalla root della repository.
+
+>Se hai usato `conda` allora esegui:
+>````bash
+>conda activate tecday-2025
+>```
 
 Poi apri nel tuo browser "http://localhost:8888" e seleziona il notebook che desideri eseguire.
