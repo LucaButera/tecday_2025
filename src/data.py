@@ -20,7 +20,13 @@ def shift_date_back(date: str, hours: int) -> str:
 class PeakWeatherTorchDataset(Dataset):
     Sample = namedtuple("Sample", ["x", "y", "mu", "sigma"])
 
-    def __init__(self, window: int, horizon: int, parameter: str = "temperature"):
+    def __init__(
+        self,
+        window: int,
+        horizon: int,
+        parameter: str = "temperature",
+        max_stations: int | None = 30,
+    ):
         ds = PeakWeatherDataset(
             root=None,
             compute_uv=False,
@@ -39,6 +45,8 @@ class PeakWeatherTorchDataset(Dataset):
             return_mask=True,
         )
         good_stations = (mask.sum(axis=0) > 0).squeeze()
+        if max_stations is not None:
+            good_stations[good_stations.cumsum() > max_stations] = False
         self.data = {
             "train": train[:, good_stations].squeeze(),
             "val": ds.get_observations(
